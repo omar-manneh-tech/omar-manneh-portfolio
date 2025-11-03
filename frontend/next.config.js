@@ -2,6 +2,12 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  // Reduce build warnings
+  logging: {
+    fetches: {
+      fullUrl: false,
+    },
+  },
   images: {
     domains: [
       process.env.S3_BUCKET_DOMAIN || "",
@@ -58,6 +64,24 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: ["@headlessui/react", "@heroicons/react"],
+  },
+  // Suppress deprecation warnings from dependencies
+  webpack: (config, { isServer }) => {
+    // Handle client-side only packages
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+    return config;
+  },
+  // Ignore build warnings from dependencies
+  onDemandEntries: {
+    maxInactiveAge: 25 * 1000,
+    pagesBufferLength: 2,
   },
 };
 
