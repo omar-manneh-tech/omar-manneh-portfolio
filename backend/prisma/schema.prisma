@@ -1,0 +1,229 @@
+// Prisma schema for Professional Portfolio Platform
+// Enterprise-grade with audit logging
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  PUBLIC_USER
+  VERIFIED_USER
+  ORG_ADMIN
+  SUPER_ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+enum ActionType {
+  CREATE
+  UPDATE
+  DELETE
+}
+
+enum EntityType {
+  USER
+  PROFILE
+  POSITION
+  ACHIEVEMENT
+  CERTIFICATE
+  VERIFICATION
+}
+
+// Users table
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  passwordHash  String?
+  role          UserRole  @default(PUBLIC_USER)
+  bio           String?
+  publicProfile Boolean   @default(false)
+  mfaEnabled   Boolean   @default(false)
+  mfaSecret    String?
+  
+  // Relations
+  profile       Profile?
+  refreshTokens RefreshToken[]
+  verifications Verification[]
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+// Refresh tokens for JWT rotation
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  revokedAt DateTime?
+  
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+// Profiles table
+model Profile {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  publicUrlSlug    String?  @unique
+  theme            String   @default("corporate")
+  visibilitySettings Json   @default("{}") // JSON field for visibility settings
+  
+  // Relations
+  positions      Position[]
+  achievements   Achievement[]
+  certificates   Certificate[]
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([publicUrlSlug])
+  @@map("profiles")
+}
+
+// Positions (work history)
+model Position {
+  id          String   @id @default(uuid())
+  profileId  String
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  title      String
+  organization String
+  startDate  DateTime
+  endDate    DateTime?
+  description String?  @db.Text
+  isCurrent  Boolean  @default(false)
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([profileId])
+  @@map("positions")
+}
+
+// Achievements
+model Achievement {
+  id          String   @id @default(uuid())
+  profileId   String
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  title       String
+  description String?  @db.Text
+  date        DateTime
+  evidenceUrls Json?   // Array of URLs stored as JSON
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([profileId])
+  @@map("achievements")
+}
+
+// Certificates
+model Certificate {
+  id          String   @id @default(uuid())
+  profileId   String
+  profile     Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  fileKey     String   // S3 key
+  fileName    String
+  fileSize    Int?     // Size in bytes
+  mimeType    String?
+  issuedBy    String
+  issuedDate  DateTime
+  verified    Boolean  @default(false)
+  verifiedAt  DateTime?
+  
+  // Relations
+  verifications Verification[]
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([profileId])
+  @@index([verified])
+  @@map("certificates")
+}
+
+// Verifications
+model Verification {
+  id          String            @id @default(uuid())
+  certificateId String
+  certificate Certificate       @relation(fields: [certificateId], references: [id], onDelete: Cascade)
+  verifierId  String
+  verifier    User              @relation(fields: [verifierId], references: [id])
+  status      VerificationStatus @default(PENDING)
+  note        String?           @db.Text
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([certificateId])
+  @@index([verifierId])
+  @@index([status])
+  @@map("verifications")
+}
+
+// Audit logs (tamper-evident)
+model Audit {
+  id           String     @id @default(uuid())
+  entityType   EntityType
+  entityId     String
+  actorId      String?    // User ID who performed the action
+  actionType   ActionType
+  before       Json?      // State before action (JSON)
+  after        Json?      // State after action (JSON)
+  ip           String?
+  userAgent    String?    @db.VarChar(500)
+  requestHash  String?    // Hash of request body for tamper detection
+  timestamp    DateTime   @default(now())
+  
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@index([timestamp])
+  @@index([actionType])
+  @@map("audits")
+}
+
+// Event log (append-only for cryptographic chain)
+model EventLog {
+  id           String   @id @default(uuid())
+  eventType    String
+  entityType   EntityType
+  entityId     String
+  payload      Json     // Event payload
+  previousHash String?  // Hash of previous event (for chaining)
+  currentHash  String   // Hash of this event
+  timestamp    DateTime @default(now())
+  
+  @@index([entityType, entityId])
+  @@index([timestamp])
+  @@unique([currentHash])
+  @@map("event_logs")
+}
+
