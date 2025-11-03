@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { useInView } from "react-intersection-observer";
 import { FiCode, FiUsers, FiAward } from "react-icons/fi";
-import Image from "next/image";
 
 export function About() {
   const [ref, inView] = useInView({
@@ -77,7 +76,7 @@ export function About() {
                 Full-Stack Web Developer
               </h3>
               <p className="text-gray-400 text-lg leading-relaxed mb-4">
-                I'm a passionate developer with over 5 years of experience
+                I&apos;m a passionate developer with over 5 years of experience
                 building modern web applications. I specialize in creating
                 beautiful, functional, and user-friendly experiences.
               </p>

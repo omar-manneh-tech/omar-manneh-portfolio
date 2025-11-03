@@ -55,7 +55,7 @@ export function Contact() {
           </h2>
           <div className="w-24 h-1 bg-gradient-to-r from-violet-500 to-pink-500 mx-auto rounded-full" />
           <p className="text-gray-400 text-lg mt-4 max-w-2xl mx-auto">
-            Let's discuss your next project or just say hello!
+            Let&apos;s discuss your next project or just say hello!
           </p>
         </motion.div>
 
@@ -69,10 +69,10 @@ export function Contact() {
           >
             <div>
               <h3 className="text-2xl font-bold mb-4 gradient-text">
-                Let's Connect
+                Let&apos;s Connect
               </h3>
               <p className="text-gray-400 mb-8">
-                I'm always open to discussing new projects, creative ideas, or
+                I&apos;m always open to discussing new projects, creative ideas, or
                 opportunities to be part of your vision.
               </p>
             </div>

@@ -12,7 +12,6 @@ import {
   FiMail,
 } from "react-icons/fi";
 import { FaGithub, FaLinkedin, FaTwitter } from "react-icons/fa";
-import Link from "next/link";
 
 const navItems = [
   { name: "Home", href: "#home", icon: FiHome },

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FiArrowDown, FiCode, FiZap, FiTrendingUp } from "react-icons/fi";
+import { FiArrowDown, FiZap } from "react-icons/fi";
 import { FaReact, FaNodeJs } from "react-icons/fa";
 import { SiNextdotjs, SiTypescript } from "react-icons/si";
 
@@ -96,7 +96,7 @@ export function Hero() {
           variants={itemVariants}
           className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6"
         >
-          <span className="text-gray-100">Hi, I'm </span>
+          <span className="text-gray-100">Hi, I&apos;m </span>
           <span className="gradient-text">John Doe</span>
         </motion.h1>
 
